@@ -69,10 +69,12 @@ def get_course_workload_and_additional_keywords(client, user_input: str):
 
 def get_recommendations_reasoning(client, results, user_input: str):
 
+    records = results.to_dict(orient='records')
+
     prompt = f"""
-    You are a course recommendation system for a university. You have access to a database of courses with their descriptions and credit hours.
-    You have already recommended the following courses based on the user's input:
-    {results.to_dict(orient='records')}
+    You are a course recommendation system for a university.
+    Our ML models recommended the following courses based on the user's input:
+    {records}
 
     Now, provide a brief reasoning for why each course was recommended based on the user's input below:
     {user_input}
@@ -91,6 +93,8 @@ def get_recommendations_reasoning(client, results, user_input: str):
     If you notice a long course description, summarize it. 
 
     Ensure it is a valid JSON string. 
+
+    Note: if there are no input records then do not hallucianate. In that case you should return no results. 
     """
 
     response = client.chat.completions.create(

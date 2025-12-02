@@ -46,7 +46,9 @@ def find_courses_by_text_similarity(user_text, same_cluster_courses, top_k=10):
     top_idx = sims.argsort()[::-1][:top_k]
 
     # Build result based on the 
-    results = same_cluster_courses.iloc[top_idx][["key", "title", "description", "minimum credits"]].copy()
+    results = same_cluster_courses.iloc[top_idx][
+        ["key", "title", "description", "minimum credits", "cluster"]
+    ].copy()
     results["similarity"] = sims[top_idx]
 
     return results
