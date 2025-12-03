@@ -179,11 +179,31 @@ st.set_page_config(page_title="Course Recommender", layout="wide")
 
 max_width_style = """
 <style>
+    /* Main container width */
     .block-container {
         max-width: 900px;
         margin-left: auto;
         margin-right: auto;
     }
+
+    .course-card {
+        background-color: #242233A7;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .course-card h2 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 1.5rem;
+    }
+    .course-card p {
+        margin: 2px 0;
+        line-height: 1.4;
+    }
+
+
 </style>
 """
 st.markdown(max_width_style, unsafe_allow_html=True)
@@ -205,18 +225,21 @@ if st.button("Recommend"):
             all_recommended_data, results_llm, preferred_credit_level = get_recommendations(user_input)
 
         st.success("Here are your recommended courses:")
-
         for rec in results_llm:
-            expander_title = f"{rec['key']} — {rec['title']}"
-            
-            with st.expander(expander_title, expanded=True):
-                st.markdown(f"** Minimum Credits:** {rec['minimum_credits']}")
-                st.markdown(f"** Similarity:** {round(rec['similarity']*100, 1)}%")
-                st.markdown(f"** Description:**")
-                st.write(rec["description"])
-                st.markdown(f"** Reasoning:**")
-                st.write(rec["reasoning"])
-                st.write("")
+            st.markdown(
+                f"""
+                <div class="course-card">
+                    <h2>{rec['key']} — {rec['title']}</h2>
+                    <p><strong> Minimum Credits:</strong> {rec['minimum_credits']}</p>
+                    <p><strong> Similarity:</strong> {round(rec['similarity']*100, 1)}%</p>
+                    </br>
+                    <p><strong> Description:</strong><br>{rec['description']}</p>
+                    </br>
+                    <p><strong> Reasoning:</strong><br>{rec['reasoning']}</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
         # Plot the new bubble chart
         fig = plot_workload_vs_interest_highlighted(
