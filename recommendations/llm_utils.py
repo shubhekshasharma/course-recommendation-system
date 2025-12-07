@@ -30,15 +30,45 @@ def get_course_workload_and_additional_keywords(client, user_input: str):
     The user's input is as follows:
     {user_input}
 
-    Aditionally, suggest extract relevant keywords and suggest additional keywords that can reflect user's interests. 
-    For example, for "Oscars and film studies":
-    extracted relevant keywords are: film
-    suggested keywords are: acting, theatre, performing arts, etc.
+    Your tasks:
+    1. Determine the workload preference (must be one of: Low, Standard, High)
+    2. Extract and infer academic interest keywords for course matching
 
-    For example, for "Interstellar travel":
-    extracted suggested keywords are: rockets, travelling, space, astronomy, etc. 
+    WORKLOAD CATEGORIES:
+    - Low: Light workload, fewer courses, more flexibility
+    - Standard: Moderate workload, typical course load
+    - High: Heavy workload, many courses, intensive study
 
-    Return the result in JSON format with the following fields (use the following as a template):
+    IMPORTANT: If the user does not mention anything about workload, effort level, time commitment, or course load, default to "Standard".
+
+    INTEREST KEYWORDS EXTRACTION:
+    Extract comprehensive academic keywords that represent the user's interests. These keywords will be used to match against course descriptions and titles.
+
+    Guidelines for keyword extraction:
+    - Include ALL relevant subject areas, topics, and fields mentioned or implied
+    - Add related academic disciplines and subdisciplines
+    - Include synonyms and related terminology commonly used in course catalogs
+    - Focus ONLY on academic/subject matter keywords (exclude workload preferences, time commitments, or vague terms)
+    - Use specific academic terms that would appear in course titles and descriptions
+    - Include technical terminology, techniques, and methodologies specific to the subject
+    - Add variations and related forms of words (e.g., "photograph", "photography", "photographic", "photographer")
+    - Think about what words would appear in a dedicated course focused entirely on this subject
+    - Prioritize depth over breadth - include 15-20 highly relevant keywords rather than generic terms
+
+    Examples:
+    Input: "I'm interested in the Oscars and film studies"
+    Keywords: ["film", "cinema", "movies", "acting", "theatre", "performing arts", "drama", "entertainment", "media studies", "visual arts", "filmmaking", "cinematography", "directing", "screenwriting", "film production", "film theory", "film history"]
+
+    Input: "Interstellar travel and space exploration"
+    Keywords: ["space", "astronomy", "astrophysics", "aerospace", "rockets", "spacecraft", "cosmology", "planetary science", "physics", "engineering", "exploration", "interstellar", "orbital", "satellites", "propulsion"]
+
+    Input: "Machine learning and AI for healthcare applications"
+    Keywords: ["machine learning", "artificial intelligence", "AI", "healthcare", "medical", "health", "data science", "computer science", "biomedical", "algorithms", "neural networks", "deep learning", "clinical", "medicine", "predictive modeling", "diagnostics"]
+
+    Input: "I like photography"
+    Keywords: ["photography", "photographic", "camera", "digital photography", "portrait", "documentary photography", "photojournalism", "image making", "visual storytelling", "photo editing", "composition", "lighting", "darkroom", "photographer", "photographs", "images", "picture taking", "photo critique"]
+
+    Return the result in JSON format:
     {{
         "category": "Low" | "Standard" | "High",
         "reasoning": "Explanation of why this workload category was chosen based on the user's input.", 

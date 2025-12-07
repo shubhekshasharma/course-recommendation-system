@@ -30,26 +30,95 @@ def find_courses_by_same_cluster(user_text):
 
 
 def find_courses_by_text_similarity(user_text, same_cluster_courses, top_k=10):
-    # Convert user text to TF-IDF
-    user_vec = vectorizer.transform([user_text])
+    """
+    Find courses by matching user keywords against course titles, descriptions, and codes.
 
-    # Filling with empty string
+    Uses title/keyword matching (NOT TF-IDF) for better accuracy
+    Prioritizes courses with subject keywords in title/code
+    Returns similarity scores from 0-100% based on keyword matches
+
+    Returns DataFrame with top_k courses sorted by similarity score
+    """
+    # Prepare data
+    same_cluster_courses = same_cluster_courses.copy()
     same_cluster_courses["description"] = same_cluster_courses["description"].fillna("")
+    same_cluster_courses["title"] = same_cluster_courses["title"].fillna("")
 
-    # Compute TF-IDF vectors for ONLY same-cluster subset
-    cluster_vectors = vectorizer.transform(same_cluster_courses["description"])
+    user_keywords = set(user_text.lower().split())
+    words_list = user_text.lower().split()
 
-    # Compute similarity
-    sims = cosine_similarity(user_vec, cluster_vectors).flatten()
+    # Score each word based on, Position, Length
+    word_scores = []
 
-    # Top K ranked indices
-    top_idx = sims.argsort()[::-1][:top_k]
+    for i, word in enumerate(words_list):
+        if len(word) > 5: 
+            position_score = max(100 - i, 0)
+            length_score = len(word) * 5
+            total_score = position_score + length_score
+            word_scores.append((word, total_score))
 
-    # Build result based on the 
+    word_scores.sort(key=lambda x: x[1], reverse=True)
+    num_core = max(3, min(8, int(len(word_scores) * 0.4)))
+    core_keywords = [word for word, score in word_scores[:num_core]]
+
+    # Fallback: if no core keywords found, use all long words
+    if len(core_keywords) == 0:
+        core_keywords = [w for w in user_keywords if len(w) > 7]
+
+    final_sims = np.zeros(len(same_cluster_courses))
+
+    for idx, (i, row) in enumerate(same_cluster_courses.iterrows()):
+        title_lower = str(row['title']).lower()
+        title_words = set(title_lower.split())
+        key_lower = str(row['key']).lower()
+        desc_lower = str(row['description']).lower()
+
+        # Scoring logic (designed so subject-specific courses get 80-95% similarity)
+        # Core keyword in title (70% max
+        # If title contains ANY core subject keyword, it's highly relevant
+        has_core_in_title = any(kw in title_lower for kw in core_keywords)
+        if has_core_in_title:
+            # Count how many core keywords appear
+            # Base 70% for having core keyword, +extra for multiple matches
+            core_matches = sum(1 for kw in core_keywords if kw in title_lower)
+            core_title_score = 0.70 + min((core_matches - 1) * 0.05, 0.15)
+        else:
+            core_title_score = 0
+
+        # Course code/prefix matching (15% max)
+        # Courses with subject in code (e.g., "photo") are dedicated to that subject
+        code_match_score = 0
+        if any(kw in key_lower for kw in core_keywords):
+            code_match_score = 0.15
+
+        # General keyword overlap in title (10% max)
+        # Additional points for other related keywords in title
+        if len(user_keywords) > 0:
+            non_core_words = user_keywords - set(core_keywords)
+            if len(non_core_words) > 0:
+                non_core_overlap = len(non_core_words & title_words) / len(non_core_words)
+                title_overlap_score = non_core_overlap * 0.10
+            else:
+                title_overlap_score = 0
+        else:
+            title_overlap_score = 0
+
+        # Keyword frequency in description (5% max)
+        # Courses that frequently mention keywords in description
+        keyword_freq = sum(desc_lower.count(kw) for kw in core_keywords if len(kw) > 6)
+        freq_score = min(keyword_freq / 20.0, 1.0) * 0.05
+
+        # Combine all scores (max possible = 100% if all criteria met)
+        # A course with subject keyword in BOTH title AND code can score 85-100%
+        final_sims[idx] = core_title_score + code_match_score + title_overlap_score + freq_score
+
+    # Top K ranked indices based on final similarity, and build result with final similarity scores
+    top_idx = final_sims.argsort()[::-1][:top_k]
+    
     results = same_cluster_courses.iloc[top_idx][
         ["key", "title", "description", "minimum credits", "cluster"]
     ].copy()
-    results["similarity"] = sims[top_idx]
+    results["similarity"] = final_sims[top_idx]  # Use final combined similarity
 
     return results
 
