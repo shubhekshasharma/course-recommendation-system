@@ -163,7 +163,7 @@ def plot_workload_vs_interest_highlighted(
     chart = (
         highlight_band + points
     ).properties(
-        width="container", height=500, title="Workload vs Interest Match — Recommended Courses"
+        width="container", height=500
     ).configure_axis(
         labelFontSize=13,
         titleFontSize=14
@@ -223,24 +223,26 @@ if st.button("Recommend"):
     else:
         with st.spinner("Generating recommendations..."):
             all_recommended_data, results_llm, preferred_credit_level = get_recommendations(user_input)
-
-        st.success("Here are your recommended courses:")
-        for rec in results_llm:
-            st.markdown(
-                f"""
-                <div class="course-card">
-                    <h2>{rec['key']} — {rec['title']}</h2>
-                    <p><strong> Minimum Credits:</strong> {rec['minimum_credits']}</p>
-                    <p><strong> Similarity:</strong> {round(rec['similarity']*100, 1)}%</p>
-                    </br>
-                    <p><strong> Description:</strong><br>{rec['description']}</p>
-                    </br>
-                    <p><strong> Reasoning:</strong><br>{rec['reasoning']}</p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
+        if not results_llm:
+            st.error("Sorry, no recommendations could be generated based on your input.")
+        else:
+            st.success("Here are your recommended courses:")
+            for rec in results_llm:
+                st.markdown(
+                    f"""
+                    <div class="course-card">
+                        <h2>{rec['key']} — {rec['title']}</h2>
+                        <p><strong> Minimum Credits:</strong> {rec['minimum_credits']}</p>
+                        <p><strong> Similarity:</strong> {round(rec['similarity']*100, 1)}%</p>
+                        </br>
+                        <p><strong> Description:</strong><br>{rec['description']}</p>
+                        </br>
+                        <p><strong> Reasoning:</strong><br>{rec['reasoning']}</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+        st.markdown("### Visualization of Recommended Courses")
         # Plot the new bubble chart
         fig = plot_workload_vs_interest_highlighted(
             all_recommended_data, 
