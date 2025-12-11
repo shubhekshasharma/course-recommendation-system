@@ -2,7 +2,7 @@ import os
 import streamlit as st
 
 LLM_LITE_TOKEN = st.secrets["LLM_LITE_TOKEN"]
-LLM_LITE_URL = st.secrets("LLM_LITE_URL")
+LLM_LITE_URL = st.secrets["LLM_LITE_URL"]
 
 
 def get_llm_client():
