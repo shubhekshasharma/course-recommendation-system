@@ -187,22 +187,82 @@ max_width_style = """
     }
 
     .course-card {
-        background-color: #242233A7;
-        padding: 20px;
-        margin-bottom: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .course-card h2 {
-        margin-top: 0;
-        margin-bottom: 10px;
-        font-size: 1.5rem;
-    }
-    .course-card p {
-        margin: 2px 0;
-        line-height: 1.4;
+        background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
+        padding: 24px;
+        margin-bottom: 24px;
+        border-radius: 12px;
+        border: 1px solid #4a4a6a;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        color: #e0e0e0;
     }
 
+    .course-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .course-card h2 {
+        margin-top: 0;
+        margin-bottom: 16px;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #6c63ff;
+        border-bottom: 2px solid #4a4a6a;
+        padding-bottom: 12px;
+    }
+
+    .course-card p {
+        margin: 8px 0;
+        line-height: 1.6;
+        color: #e0e0e0;
+    }
+
+    .course-meta {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .meta-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .credits-badge {
+        background-color: #2d3d44;
+        color: #e0e0e0;
+        border: 1px solid #4a4a6a;
+    }
+
+    .similarity-badge {
+        background-color: #2d2d44;
+        color: #e0e0e0;
+        border: 1px solid #4a4a6a;
+    }
+
+    .course-section {
+        margin-top: 16px;
+        padding-top: 12px;
+    }
+
+    .section-label {
+        font-weight: 600;
+        color: #b0b0b0;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .section-content {
+        color: #e0e0e0;
+        line-height: 1.7;
+    }
 
 </style>
 """
@@ -224,7 +284,7 @@ if st.button("Recommend"):
         with st.spinner("Generating recommendations..."):
             all_recommended_data, results_llm, preferred_credit_level = get_recommendations(user_input)
         if not results_llm:
-            st.error("Sorry, no recommendations could be generated based on your input.")
+            st.error("No course recommendations found. Try being more specific about your interests or mention your preferred workload level.")
         else:
             st.success("Here are your recommended courses:")
             for rec in results_llm:
@@ -232,12 +292,18 @@ if st.button("Recommend"):
                     f"""
                     <div class="course-card">
                         <h2>{rec['key']} — {rec['title']}</h2>
-                        <p><strong> Minimum Credits:</strong> {rec['minimum_credits']}</p>
-                        <p><strong> Similarity:</strong> {round(rec['similarity']*100, 1)}%</p>
-                        </br>
-                        <p><strong> Description:</strong><br>{rec['description']}</p>
-                        </br>
-                        <p><strong> Reasoning:</strong><br>{rec['reasoning']}</p>
+                        <div class="course-meta">
+                            <span class="meta-badge credits-badge">Credits: {rec['minimum_credits']}</span>
+                            <span class="meta-badge similarity-badge">Match: {round(rec['similarity']*100, 1)}%</span>
+                        </div>
+                        <div class="course-section">
+                            <div class="section-label">Description</div>
+                            <div class="section-content">{rec['description']}</div>
+                        </div>
+                        <div class="course-section">
+                            <div class="section-label">Why This Course?</div>
+                            <div class="section-content">{rec['reasoning']}</div>
+                        </div>
                     </div>
                     """,
                     unsafe_allow_html=True
