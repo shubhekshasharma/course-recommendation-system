@@ -8,7 +8,7 @@ import numpy as np
 import scipy
 
 
-COURSES_FILES_PATH = "/Users/subu/Desktop/Subu/Duke/DESIGNTK_530/designtk-530-f1/courses_with_cluster.csv"
+COURSES_FILES_PATH = "courses_with_cluster.csv"
 
 df = pd.read_csv(COURSES_FILES_PATH)
 
