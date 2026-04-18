@@ -1,8 +1,17 @@
 import os
 import streamlit as st
 
-LLM_LITE_TOKEN = st.secrets["LLM_LITE_TOKEN"]
-LLM_LITE_URL = st.secrets["LLM_LITE_URL"]
+def _get_secret(key):
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        value = os.environ.get(key)
+        if not value:
+            raise EnvironmentError(f"Secret '{key}' not found in st.secrets or environment variables.")
+        return value.strip()
+
+LLM_LITE_TOKEN = _get_secret("LLM_LITE_TOKEN")
+LLM_LITE_URL = _get_secret("LLM_LITE_URL")
 
 
 def get_llm_client():
